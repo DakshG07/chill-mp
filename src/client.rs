@@ -1,3 +1,5 @@
+use id3::Tag;
+use image::DynamicImage;
 use mpd::Client;
 use std::ops::Div;
 use std::time::Duration;
@@ -47,6 +49,7 @@ impl MediaClient {
         }
     }
 
+    /// Retrieves the title of the currently playing song.
     pub fn title(&mut self) -> Option<String> {
         return match self.conn.currentsong() {
             Err(_) => None,
@@ -57,10 +60,21 @@ impl MediaClient {
         };
     }
 
+    /// Retrieves the playtime of the currently playing song, in the form of a `PlayTime`.
     pub fn playtime(&mut self) -> Option<PlayTime> {
         return match self.conn.status() {
             Err(_) => None,
             Ok(status) => status.time.map(|time| time.into()),
         };
+    }
+
+    /// Retrieves the album art of the currently playing song, as a `DynamicImage`.
+    pub fn art(&mut self) -> Option<DynamicImage> {
+        let filename = self.conn.currentsong().ok()??.file;
+        let music_dir = "/home/dukk/Music/".to_string();
+        let path = format!("{}{}", music_dir, filename);
+        let tag = Tag::read_from_path(path).ok()?;
+        let picture = tag.pictures().next()?;
+        image::load_from_memory(&picture.data).ok()
     }
 }
