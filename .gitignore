@@ -1,0 +1,7 @@
+.direnv/
+debug/
+target/
+
+**/*.rs.bk
+
+*.pdb
