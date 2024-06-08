@@ -69,9 +69,8 @@ impl MediaClient {
     }
 
     /// Retrieves the album art of the currently playing song, as a `DynamicImage`.
-    pub fn art(&mut self) -> Option<DynamicImage> {
+    pub fn art(&mut self, music_dir: String) -> Option<DynamicImage> {
         let filename = self.conn.currentsong().ok()??.file;
-        let music_dir = "/home/dukk/Music/".to_string();
         let path = format!("{}{}", music_dir, filename);
         let tag = Tag::read_from_path(path).ok()?;
         let picture = tag.pictures().next()?;
