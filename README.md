@@ -1,6 +1,6 @@
-<p align="center"><h1>`chill-mp`</h1></p>
+# `chill-mp`
 <p align="center">A chill music player.</p>
----
+
 `chill-mp` is a dead simple music player for `mpd`. It offers _no_ control over your music: for that, you may use a client such as `ncmpcpp`.
 
 ## Configuration
