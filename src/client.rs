@@ -11,8 +11,8 @@ pub struct MediaClient {
 
 /// `PlayTime` encapsulates the duration and elapsed time of a song.
 pub struct PlayTime {
-    elapsed: Duration,
-    duration: Duration,
+    pub elapsed: Duration,
+    pub duration: Duration,
 }
 
 impl From<(Duration, Duration)> for PlayTime {
@@ -26,7 +26,7 @@ impl PlayTime {
     /// Gets the elapsed time in a formatted string.
     pub fn elapsed(&self) -> String {
         format!(
-            "{}:{}",
+            "{}:{:02}",
             self.elapsed.as_secs().div(60),
             self.elapsed.as_secs() % 60
         )
@@ -34,7 +34,7 @@ impl PlayTime {
     /// Gets the duration in a formatted string.
     pub fn duration(&self) -> String {
         format!(
-            "{}:{}",
+            "{}:{:02}",
             self.duration.as_secs().div(60),
             self.duration.as_secs() % 60
         )
@@ -51,26 +51,33 @@ impl MediaClient {
 
     /// Retrieves the title of the currently playing song.
     pub fn title(&mut self) -> Option<String> {
-        return match self.conn.currentsong() {
-            Err(_) => None,
-            Ok(song) => match song {
-                None => None,
-                Some(music) => Some(music.title.unwrap_or("No Song Name".to_string())),
-            },
+        if let Ok(song) = self.conn.currentsong() {
+            return Some(song?.title.unwrap_or("No Artist".to_string()));
         };
+        None
+    }
+
+    /// Retrieves the title of the currently playing song.
+    pub fn artist(&mut self) -> Option<String> {
+        if let Ok(song) = self.conn.currentsong() {
+            return Some(song?.artist.unwrap_or("No Artist".to_string()));
+        };
+        None
     }
 
     /// Retrieves the playtime of the currently playing song, in the form of a `PlayTime`.
     pub fn playtime(&mut self) -> Option<PlayTime> {
-        return match self.conn.status() {
-            Err(_) => None,
-            Ok(status) => status.time.map(|time| time.into()),
-        };
+        self.conn.status().ok()?.time.map(|time| time.into())
+    }
+
+    /// Gets the filename of the current song.
+    pub fn file(&mut self) -> Option<String> {
+        Some(self.conn.currentsong().ok()??.file)
     }
 
     /// Retrieves the album art of the currently playing song, as a `DynamicImage`.
-    pub fn art(&mut self, music_dir: String) -> Option<DynamicImage> {
-        let filename = self.conn.currentsong().ok()??.file;
+    pub fn art(&mut self, music_dir: &str) -> Option<DynamicImage> {
+        let filename = self.file()?;
         let path = format!("{}{}", music_dir, filename);
         let tag = Tag::read_from_path(path).ok()?;
         let picture = tag.pictures().next()?;
